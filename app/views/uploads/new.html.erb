@@ -1,0 +1,37 @@
+<div class="upload-container">
+  <h1 class="upload-title">Upload Excel File</h1>
+  
+  <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Expected Excel Format:</h3>
+    <p style="margin: 0; font-size: 0.9rem; color: #666;">
+      The Excel file should contain the following columns:<br>
+      Req. No, Group, Priority, Request Date, User ID, User Name, User Location, Assigned Group, Handler/Approver, Summary, Age, Status, Category, Item Affected, Type, Last Comment, Resolutin Desc, Change Type, Risk Level, Change Date, Modified Date
+    </p>
+  </div>
+  
+  <%= form_with url: uploads_path, local: true, multipart: true, class: "upload-form" do |form| %>
+    <div class="form-group">
+      <%= form.label :file, "Select Excel File", class: "form-label" %>
+      <div class="file-input-wrapper">
+        <%= form.file_field :file, 
+            accept: ".xlsx,.xls",
+            required: true,
+            class: "file-input",
+            id: "excel-file",
+            onchange: "document.getElementById('file-name').textContent = this.files[0]?.name || 'No file selected'" %>
+        <label for="excel-file" class="file-input-label">Choose File</label>
+      </div>
+      <div id="file-name" class="file-name">No file selected</div>
+    </div>
+    
+    <div class="form-group">
+      <%= form.submit "Upload and Process", class: "btn btn-primary btn-block" %>
+    </div>
+  <% end %>
+  
+  <div style="margin-top: 2rem; padding: 1rem; background: #fff3cd; border-radius: 8px;">
+    <p style="margin: 0; font-size: 0.9rem; color: #856404;">
+      <strong>Note:</strong> If a ticket with the same Req. No already exists, it will be updated instead of creating a duplicate.
+    </p>
+  </div>
+</div>

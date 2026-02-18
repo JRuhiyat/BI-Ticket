@@ -1,0 +1,571 @@
+<div class="dashboard-header">
+  <h1 class="dashboard-title">BI Dashboard</h1>
+</div>
+
+<!-- Filters -->
+<div class="filter-section">
+  <h3>General Dashboard Filter</h3>
+  <%= form_with url: dashboard_path, method: :get, local: true, class: "filter-form" do |form| %>
+    <div class="filter-row">
+      <div class="filter-group">
+        <%= form.label :category_id, "Category" %>
+        <%= form.select :category_id, 
+            options_from_collection_for_select(@categories, :id, :name, @category_filter),
+            { include_blank: "All Categories" },
+            { class: "form-select" } %>
+      </div>
+      
+      <div class="filter-group">
+        <%= form.label :item_affected_id, "Item Affected" %>
+        <%= form.select :item_affected_id,
+            options_from_collection_for_select(@item_affecteds, :id, :name, @item_affected_filter),
+            { include_blank: "All Items" },
+            { class: "form-select" } %>
+      </div>
+      
+      <div class="filter-group">
+        <%= form.label :period, "Period" %>
+        <%= form.select :period,
+            options_for_select([["Day", "day"], ["Month", "month"], ["Year", "year"]], @period_filter),
+            {},
+            { class: "form-select" } %>
+      </div>
+    </div>
+    
+    <div class="filter-actions">
+      <%= form.submit "Apply Filters", class: "btn btn-primary" %>
+      <%= link_to "Clear Filters", dashboard_path, class: "btn", style: "background: #6c757d; color: white;" %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Counter Cards -->
+<div class="counters-grid">
+  <div class="counter-card">
+    <h3>Total Tickets</h3>
+    <div class="value"><%= @total_tickets %></div>
+  </div>
+  
+  <div class="counter-card completed">
+    <h3>Completed Tickets</h3>
+    <div class="value"><%= @completed_tickets %></div>
+    <div class="sub-value"><%= number_to_percentage(@total_tickets > 0 ? (@completed_tickets.to_f / @total_tickets * 100) : 0, precision: 1) %></div>
+  </div>
+  
+  <div class="counter-card not-completed">
+    <h3>Not Completed Tickets</h3>
+    <div class="value"><%= @not_completed_tickets %></div>
+    <div class="sub-value"><%= number_to_percentage(@total_tickets > 0 ? (@not_completed_tickets.to_f / @total_tickets * 100) : 0, precision: 1) %></div>
+  </div>
+</div>
+
+<!-- Tickets by Category Counters -->
+<% if @tickets_by_category.any? %>
+  <div class="filter-section">
+    <h3>Tickets by Category</h3>
+    <div class="counters-grid">
+      <% @tickets_by_category.each do |category_name, total| %>
+        <div class="counter-card">
+          <h3><%= category_name %></h3>
+          <div class="value"><%= total %></div>
+          <div class="sub-value">
+            Completed: <%= @completed_by_category[category_name] || 0 %> | 
+            Not Completed: <%= @not_completed_by_category[category_name] || 0 %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+  <!-- Time Series Chart -->
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <h3>Tickets per Period (<%= @period_filter.capitalize %>)</h3>
+      <button class="chart-toggle-btn" onclick="toggleChart('time-series-chart')" aria-label="Toggle chart">
+        <span class="toggle-icon">▼</span>
+      </button>
+    </div>
+    <div class="chart-content" id="time-series-chart">
+      <% if @time_series.any? || @completed_time_series.any? %>
+        <%= column_chart [
+          { name: "Total Tickets", data: @time_series },
+          { name: "Completed Tickets", data: @completed_time_series }
+        ], id: "time-series-chart-canvas", height: "400px", colors: ["#667eea", "#28a745"] %>
+      <% else %>
+        <p style="text-align: center; color: #999; padding: 2rem;">No data available for the selected period.</p>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Status Pie Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Ticket Status Distribution</h3>
+      <button class="chart-toggle-btn" onclick="toggleChart('status-pie-chart')" aria-label="Toggle chart">
+        <span class="toggle-icon">▼</span>
+      </button>
+    </div>
+    <div class="chart-content" id="status-pie-chart">
+      <% if @status_distribution.any? %>
+        <%= pie_chart @status_distribution, id: "status-pie-chart-canvas", height: "400px" %>
+      <% else %>
+        <p style="text-align: center; color: #999; padding: 2rem;">No status data available.</p>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Category Pie Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Ticket Category Distribution</h3>
+      <button class="chart-toggle-btn" onclick="toggleChart('category-pie-chart')" aria-label="Toggle chart">
+        <span class="toggle-icon">▼</span>
+      </button>
+    </div>
+    <div class="chart-content" id="category-pie-chart">
+      <% if @category_distribution.any? %>
+        <%= pie_chart @category_distribution, id: "category-pie-chart-canvas", height: "400px" %>
+      <% else %>
+        <p style="text-align: center; color: #999; padding: 2rem;">No category data available.</p>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Item Affected Pie Chart -->
+  <% if @item_affected_distribution.any? %>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Item Affected Distribution</h3>
+        <button class="chart-toggle-btn" onclick="toggleChart('item-affected-pie-chart')" aria-label="Toggle chart">
+          <span class="toggle-icon">▼</span>
+        </button>
+      </div>
+      <div class="chart-content" id="item-affected-pie-chart">
+        <%= pie_chart @item_affected_distribution, id: "item-affected-pie-chart-canvas", height: "400px" %>
+      </div>
+    </div>
+  <% end %>
+  
+  <!-- Top 10 User Locations -->
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <h3>Top 10 User Locations
+        <%= link_to "Sort ASC", dashboard_path(category_id: @category_filter, item_affected_id: @item_affected_filter, period: @period_filter, sort_order: "asc"), 
+            class: "btn", style: "background: #667eea; color: white; margin-left: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;" %>
+        <%= link_to "Sort DESC", dashboard_path(category_id: @category_filter, item_affected_id: @item_affected_filter, period: @period_filter, sort_order: "desc"), 
+            class: "btn", style: "background: #667eea; color: white; margin-left: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem;" %>
+      </h3>
+      <button class="chart-toggle-btn" onclick="toggleChart('user-locations-bar-chart')" aria-label="Toggle chart">
+        <span class="toggle-icon">▼</span>
+      </button>
+    </div>
+    <div class="chart-content" id="user-locations-bar-chart">
+      <% if @user_locations.any? %>
+        <%= bar_chart @user_locations, id: "user-locations-bar-chart-canvas", height: "400px", horizontal: true, colors: ["#667eea"] %>
+      <% else %>
+        <p style="text-align: center; color: #999; padding: 2rem;">No user location data available.</p>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Store chart instances
+  window.chartInstances = window.chartInstances || {};
+  
+  // Global legend click handlers
+  window.handleColumnChartLegendClick = function(e, legendItem) {
+    const chart = this.chart;
+    const index = legendItem.datasetIndex;
+    if (index !== undefined) {
+      const meta = chart.getDatasetMeta(index);
+      if (meta) {
+        meta.hidden = meta.hidden === null ? true : !meta.hidden;
+        chart.update();
+      }
+    }
+  };
+  
+  window.handlePieChartLegendClick = function(e, legendItem) {
+    const chart = this.chart;
+    const index = legendItem.index;
+    if (index !== undefined) {
+      const meta = chart.getDatasetMeta(0);
+      if (meta && meta.data && meta.data[index]) {
+        meta.data[index].hidden = !meta.data[index].hidden;
+        chart.update();
+      }
+    }
+  };
+  
+  function toggleChart(chartId) {
+    const chartContent = document.getElementById(chartId);
+    if (!chartContent) return;
+    
+    const chartCard = chartContent.closest('.chart-card');
+    const toggleBtn = chartCard.querySelector('.chart-toggle-btn');
+    const toggleIcon = toggleBtn.querySelector('.toggle-icon');
+    
+    // Get the canvas ID for this chart
+    const canvasId = chartId.replace('-chart', '-chart-canvas');
+    let chartInstance = window.chartInstances[chartId];
+    
+    // If not stored, try to get it from Chart.js
+    if (!chartInstance && typeof Chart !== 'undefined') {
+      chartInstance = Chart.getChart(canvasId);
+      if (chartInstance) {
+        window.chartInstances[chartId] = chartInstance;
+      }
+    }
+    
+    if (chartContent.classList.contains('hidden')) {
+      // Show chart - show all datasets
+      if (chartInstance && chartInstance.data && chartInstance.data.datasets) {
+        chartInstance.data.datasets.forEach((dataset, index) => {
+          chartInstance.setDatasetVisibility(index, true);
+        });
+        chartInstance.update();
+      }
+      
+      chartContent.classList.remove('hidden');
+      toggleIcon.textContent = '▼';
+      toggleIcon.style.transform = 'rotate(0deg)';
+      toggleBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      // Hide chart - hide all datasets
+      if (chartInstance && chartInstance.data && chartInstance.data.datasets) {
+        chartInstance.data.datasets.forEach((dataset, index) => {
+          chartInstance.setDatasetVisibility(index, false);
+        });
+        chartInstance.update();
+      }
+      
+      chartContent.classList.add('hidden');
+      toggleIcon.textContent = '▶';
+      toggleIcon.style.transform = 'rotate(-90deg)';
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+  
+  // Configure legend click functionality for a chart
+  function configureLegendClick(chartInstance, canvasId) {
+    if (!chartInstance && !canvasId) {
+      console.log('No chart instance or canvas ID provided');
+      return;
+    }
+    
+    // Check if Chart.js is available
+    if (typeof Chart !== 'undefined' && chartInstance) {
+      console.log('Using Chart.js for legend clicks');
+      configureChartJsLegend(chartInstance);
+    } else {
+      console.log('Chart.js not available, using DOM-based approach');
+      configureDOMLegend(canvasId);
+    }
+  }
+  
+  // Configure Chart.js legend clicks
+  function configureChartJsLegend(chartInstance) {
+    const chartType = chartInstance.config?.type;
+    if (!chartType) return;
+    
+    // Configure Chart.js legend onClick
+    if (!chartInstance.options) {
+      chartInstance.options = {};
+    }
+    if (!chartInstance.options.plugins) {
+      chartInstance.options.plugins = {};
+    }
+    if (!chartInstance.options.plugins.legend) {
+      chartInstance.options.plugins.legend = {};
+    }
+    
+    chartInstance.options.plugins.legend.onClick = function(e, legendItem) {
+      const chart = this.chart || chartInstance;
+      
+      if (chartType === 'pie' || chartType === 'doughnut') {
+        const index = legendItem.index;
+        if (index !== undefined && index !== null) {
+          const meta = chart.getDatasetMeta(0);
+          if (meta && meta.data && meta.data[index]) {
+            meta.data[index].hidden = !meta.data[index].hidden;
+            chart.update();
+          }
+        }
+      } else {
+        const datasetIndex = legendItem.datasetIndex;
+        if (datasetIndex !== undefined && datasetIndex !== null) {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          if (meta) {
+            meta.hidden = meta.hidden === null ? true : !meta.hidden;
+            chart.update();
+          }
+        }
+      }
+    };
+    
+    // Also attach DOM listeners as fallback
+    attachDOMListeners(chartInstance.canvas, chartInstance, chartType);
+  }
+  
+  // Configure DOM-based legend clicks (works for any chart library)
+  function configureDOMLegend(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+      setTimeout(() => configureDOMLegend(canvasId), 200);
+      return;
+    }
+    
+    const chartContainer = canvas.closest('.chart-content') || canvas.parentElement;
+    if (!chartContainer) return;
+    
+    attachDOMListeners(canvas, null, null);
+  }
+  
+  // Attach click listeners to legend items in DOM
+  function attachDOMListeners(canvas, chartInstance, chartType) {
+    if (!canvas) return;
+    
+    const chartContainer = canvas.closest('.chart-content') || canvas.parentElement;
+    if (!chartContainer) return;
+    
+    function findAndAttach() {
+      // Try multiple selectors to find legend
+      const selectors = [
+        'ul',
+        'div > ul',
+        'canvas + * ul',
+        '[class*="legend"]',
+        '.chartjs-legend',
+        'div[role="list"]',
+        'div[role="listbox"]'
+      ];
+      
+      let legendContainer = null;
+      for (const selector of selectors) {
+        legendContainer = chartContainer.querySelector(selector);
+        if (legendContainer) break;
+      }
+      
+      // Also check all children
+      if (!legendContainer) {
+        Array.from(chartContainer.children).forEach(child => {
+          if (child.tagName === 'UL' || child.querySelector('ul')) {
+            legendContainer = child.tagName === 'UL' ? child : child.querySelector('ul');
+          }
+        });
+      }
+      
+      if (!legendContainer) {
+        return false;
+      }
+      
+      const legendItems = legendContainer.querySelectorAll('li, [role="listitem"], div[class*="legend"]');
+      
+      if (legendItems.length === 0) {
+        return false;
+      }
+      
+      console.log('Found', legendItems.length, 'legend items');
+      
+      legendItems.forEach((item, idx) => {
+        // Skip if already configured
+        if (item.dataset.legendConfigured === 'true') return;
+        item.dataset.legendConfigured = 'true';
+        
+        item.style.cursor = 'pointer';
+        item.style.userSelect = 'none';
+        
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Legend item clicked:', idx);
+          
+          // Try Chart.js first if available
+          if (chartInstance && typeof Chart !== 'undefined') {
+            try {
+              if (chartType === 'pie' || chartType === 'doughnut') {
+                const meta = chartInstance.getDatasetMeta(0);
+                if (meta && meta.data && meta.data[idx]) {
+                  meta.data[idx].hidden = !meta.data[idx].hidden;
+                  chartInstance.update();
+                  return;
+                }
+              } else {
+                const meta = chartInstance.getDatasetMeta(idx);
+                if (meta) {
+                  meta.hidden = meta.hidden === null ? true : !meta.hidden;
+                  chartInstance.update();
+                  return;
+                }
+              }
+            } catch (error) {
+              console.error('Chart.js toggle error:', error);
+            }
+          }
+          
+          // Fallback: hide/show the legend item and corresponding chart elements
+          const isHidden = item.style.opacity === '0.3' || item.classList.contains('hidden');
+          item.style.opacity = isHidden ? '1' : '0.3';
+          
+          // Try to find and hide corresponding chart data
+          // This is a generic approach that works with any chart library
+          const chartId = canvas.id;
+          if (typeof Chart !== 'undefined') {
+            const chart = Chart.getChart(chartId);
+            if (chart) {
+              if (chartType === 'pie' || chartType === 'doughnut') {
+                const meta = chart.getDatasetMeta(0);
+                if (meta && meta.data && meta.data[idx]) {
+                  meta.data[idx].hidden = !isHidden;
+                  chart.update();
+                }
+              } else {
+                const meta = chart.getDatasetMeta(idx);
+                if (meta) {
+                  meta.hidden = isHidden;
+                  chart.update();
+                }
+              }
+            }
+          }
+        });
+        
+        // Hover effects
+        item.addEventListener('mouseenter', function() {
+          if (this.style.opacity !== '0.3') {
+            this.style.opacity = '0.7';
+          }
+        });
+        item.addEventListener('mouseleave', function() {
+          if (this.style.opacity !== '0.3') {
+            this.style.opacity = '1';
+          }
+        });
+      });
+      
+      return true;
+    }
+    
+    // Try immediately and retry if needed
+    if (!findAndAttach()) {
+      setTimeout(() => {
+        if (!findAndAttach()) {
+          setTimeout(() => findAndAttach(), 500);
+        }
+      }, 300);
+    }
+  }
+  
+  // Initialize all charts as visible on page load and store chart instances
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggleButtons = document.querySelectorAll('.chart-toggle-btn');
+    toggleButtons.forEach(btn => {
+      btn.setAttribute('aria-expanded', 'true');
+    });
+    
+    // Wait for charts to be rendered, then store instances and configure legend clicks
+    // Try multiple times to ensure charts are loaded
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    function setupCharts() {
+      attempts++;
+      const chartMappings = {
+        'time-series-chart': 'time-series-chart-canvas',
+        'status-pie-chart': 'status-pie-chart-canvas',
+        'category-pie-chart': 'category-pie-chart-canvas',
+        'item-affected-pie-chart': 'item-affected-pie-chart-canvas',
+        'user-locations-bar-chart': 'user-locations-bar-chart-canvas'
+      };
+      
+      if (typeof Chart !== 'undefined') {
+        let allChartsFound = true;
+        Object.keys(chartMappings).forEach(chartId => {
+          const canvasId = chartMappings[chartId];
+          let chartInstance = null;
+          
+          // Try to get Chart.js instance
+          if (typeof Chart !== 'undefined') {
+            chartInstance = Chart.getChart(canvasId);
+          }
+          
+          if (chartInstance) {
+            if (!window.chartInstances[chartId]) {
+              window.chartInstances[chartId] = chartInstance;
+              // Configure legend click functionality
+              configureLegendClick(chartInstance, canvasId);
+            }
+          } else {
+            // Even if Chart.js instance not found, try DOM-based approach
+            configureLegendClick(null, canvasId);
+            allChartsFound = false;
+          }
+        });
+        
+        // If not all charts found and we haven't exceeded max attempts, try again
+        if (!allChartsFound && attempts < maxAttempts) {
+          setTimeout(setupCharts, 200);
+        }
+      } else if (attempts < maxAttempts) {
+        // Chart.js not loaded yet, try again
+        setTimeout(setupCharts, 200);
+      }
+    }
+    
+    // Start setup after initial delay
+    setTimeout(setupCharts, 300);
+  });
+</script>
+
+<!-- Tickets Table -->
+<div class="table-container">
+  <div class="table-header">
+    <h3>Tickets List</h3>
+    <%= link_to "View All Tickets", tickets_path(category_id: @category_filter, item_affected_id: @item_affected_filter), 
+        class: "btn btn-primary" %>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Req. No</th>
+        <th>User Name</th>
+        <th>Category</th>
+        <th>Item Affected</th>
+        <th>Status</th>
+        <th>Request Date</th>
+        <th>Modified Date</th>
+        <th>Timeline</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tickets.limit(10).each do |ticket| %>
+        <tr>
+          <td><%= ticket.req_no %></td>
+          <td><%= ticket.user_name %></td>
+          <td><%= ticket.category&.name || "N/A" %></td>
+          <td><%= ticket.item_affected&.name || "N/A" %></td>
+          <td>
+            <span class="status-badge <%= ticket.completed? ? 'completed' : 'not-completed' %>">
+              <%= ticket.status || "N/A" %>
+            </span>
+          </td>
+          <td><%= ticket.request_date&.strftime("%Y-%m-%d") || "N/A" %></td>
+          <td><%= ticket.modified_date&.strftime("%Y-%m-%d") || "N/A" %></td>
+          <td><%= ticket.timeline_display %></td>
+        </tr>
+      <% end %>
+      <% if @tickets.empty? %>
+        <tr>
+          <td colspan="8" style="text-align: center; padding: 2rem; color: #999;">
+            No tickets found. Upload an Excel file to get started.
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

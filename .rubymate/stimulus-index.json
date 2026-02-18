@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "indexedAt": 1771316173621,
+  "controllers": {
+    "hello": {
+      "filePath": "/home/ubuntu20046/projects/RoR/app/javascript/controllers/hello_controller.js",
+      "targets": [],
+      "values": [],
+      "outlets": [],
+      "actions": [],
+      "classes": [],
+      "mtime": 1771222045370.452
+    }
+  }
+}

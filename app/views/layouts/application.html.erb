@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>BI Ticket System</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+  </head>
+
+  <body>
+    <% if current_user %>
+      <nav class="navbar">
+        <div class="nav-container">
+          <div class="nav-brand">
+            <h1>BI Ticket System</h1>
+          </div>
+          <div class="nav-links">
+            <%= link_to "Dashboard", dashboard_path, class: "nav-link" %>
+            <%= link_to "Tickets", tickets_path, class: "nav-link" %>
+            <%= link_to "Upload Excel", new_upload_path, class: "nav-link" %>
+            <span class="nav-user">Welcome, <%= current_user.name %></span>
+            <%= button_to "Logout", logout_path, method: :delete, class: "btn-logout" %>
+          </div>
+        </div>
+      </nav>
+    <% end %>
+    
+    <div class="container">
+      <% if notice %>
+        <div class="alert alert-success"><%= notice %></div>
+      <% end %>
+      <% if alert %>
+        <div class="alert alert-danger"><%= alert %></div>
+      <% end %>
+      
+      <%= yield %>
+    </div>
+  </body>
+</html>
