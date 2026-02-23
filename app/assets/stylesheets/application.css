@@ -568,3 +568,84 @@ table tr:hover {
     overflow-x: scroll;
   }
 }
+
+/* Item Affected Pie Chart */
+.chart-card.item-affected {
+  grid-column: span 2; /* fill across */
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card.item-affected .chart-header {
+  flex: 0 0 auto; /* header stays fixed */
+}
+
+.chart-card.item-affected .chart-content {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start; /* chart anchored left */
+  padding-left: 0;             /* remove extra left padding */
+  padding-right: 3rem;         /* increase right space for legends */
+}
+
+#item-affected-pie-chart-canvas {
+  margin-left: 0;              /* chart hugs left edge */
+  margin-right: auto;          /* push legend space to the right */
+}
+
+/* responsive */
+/* Base layout for charts */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Item Affected Pie Chart */
+.chart-card.item-affected {
+  grid-column: span 2; /* fill across on large screens */
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card.item-affected .chart-header {
+  flex: 0 0 auto; /* header stays fixed */
+}
+
+.chart-card.item-affected .chart-content {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start; /* chart anchored left */
+  padding-left: 0;             /* remove extra left padding */
+  padding-right: 3rem;         /* reserve space for legends */
+}
+
+#item-affected-pie-chart-canvas {
+  margin-left: 0;              /* chart hugs left edge */
+  margin-right: auto;          /* legend space expands right */
+}
+
+/* Responsive overrides */
+@media (max-width: 1024px) {
+  .chart-card.item-affected {
+    grid-column: 1 / -1;       /* span full width on tablets */
+  }
+  .chart-card.item-affected .chart-content {
+    padding-right: 1.5rem;     /* reduce right padding */
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr; /* stack charts vertically */
+  }
+  .chart-card.item-affected .chart-content {
+    flex-direction: column;    /* stack chart and legend */
+    align-items: center;       /* center chart on small screens */
+    padding-right: 0;          /* no extra padding */
+  }
+  #item-affected-pie-chart-canvas {
+    margin: 0 auto;            /* center chart */
+  }
+}
