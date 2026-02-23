@@ -6,3 +6,14 @@ config/database.yml
 !/app/assets/builds/.keep
 
 /node_modules
+
+# Ignore Rails master key
+/config/master.key
+
+# Ignore local environment files
+/.env
+/.env.*
+
+# Ignore credentials backup files
+/config/credentials/*.key
+/config/credentials/*.enc.backup
