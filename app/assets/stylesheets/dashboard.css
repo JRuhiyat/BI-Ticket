@@ -1,0 +1,39 @@
+.scroll-legend {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-left: 10px;
+}
+
+.scroll-legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.scroll-legend li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* swatch */
+.scroll-legend span {
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  display: inline-block;
+  border-radius: 3px;
+}
+
+/* strike-through state for clicked legends (only applies inside .scroll-legend) */
+.scroll-legend li.strike {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* keep swatch visible but dimmed when struck */
+.scroll-legend li.strike span {
+  opacity: 0.5;
+}

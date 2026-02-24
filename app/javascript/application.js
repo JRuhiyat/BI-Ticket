@@ -6,8 +6,7 @@ import "chartkick/chart.js"
 document.addEventListener("turbo:load", () => {
   for (const chart of Object.values(Chartkick.charts)) {
     const chartObj = chart.getChartObject();
-
-    if (chartObj.config.type === "pie") {
+      
       chartObj.options.plugins.tooltip.callbacks = {
         // Remove default value line
         label: () => "",
@@ -22,12 +21,45 @@ document.addEventListener("turbo:load", () => {
           return [
             "Total: " + total,
             "Shared: " + value,
-            "Share: " + percentage + "%"
+            "percentage: " + percentage + "%"
           ];
         }
       };
 
       chartObj.update();
-    }
   }
+});
+
+document.addEventListener("turbo:load", () => {
+  let el = ["item-affected-pie-chart-canvas","category-pie-chart-canvas"]
+  el.forEach((id) => {
+    const chart = Chartkick.charts[id];
+    if (!chart) return;
+
+    const chartObj = chart.getChartObject();
+    const legendContainer = document.getElementById(id + "-item");
+    
+    const ul = document.createElement("ul");
+
+    chartObj.data.labels.forEach((label, index) => {
+      const li = document.createElement("li");
+
+      const colorBox = document.createElement("span");
+      colorBox.style.background =
+        chartObj.data.datasets[0].backgroundColor[index];
+
+      li.appendChild(colorBox);
+      li.appendChild(document.createTextNode(label));
+
+      li.onclick = () => {
+        chartObj.toggleDataVisibility(index);
+        chartObj.update();
+      };
+
+      ul.appendChild(li);
+    });
+
+    legendContainer.innerHTML = "";
+    legendContainer.appendChild(ul);
+  });
 });

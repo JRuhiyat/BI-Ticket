@@ -15,6 +15,22 @@ class DashboardController < ApplicationController
     if @item_affected_filter.present?
       @tickets = @tickets.where(item_affected_id: @item_affected_filter)
     end
+
+    # Apply period as a data window (affects all counts/charts)
+    period_start = case @period_filter
+                   when "day"
+                     30.days.ago.beginning_of_day
+                   when "month"
+                     12.months.ago.beginning_of_month
+                   when "year"
+                     5.years.ago.beginning_of_year
+                   else
+                     nil
+                   end
+
+    if period_start
+      @tickets = @tickets.where(request_date: period_start..Time.zone.now)
+    end
     
     # Total tickets
     @total_tickets = @tickets.count
@@ -50,6 +66,33 @@ class DashboardController < ApplicationController
     @item_affected_distribution = @tickets.joins(:item_affected)
       .group("item_affecteds.name")
       .count
+
+    # Aged distribution (buckets) applied to filtered @tickets using the age field
+    age_buckets = {
+      "0-7 days" => 0,
+      "8-14 days" => 0,
+      "15-30 days" => 0,
+      "31-60 days" => 0,
+      "61+ days" => 0,
+      "Unknown" => 0
+    }
+
+    # Count by bucket using age field; tickets without age -> Unknown
+    @tickets.where.not(age: nil).pluck(:age).each do |age_value|
+      days = age_value.to_i
+      case days
+      when 0..7 then age_buckets["0-7 days"] += 1
+      when 8..14 then age_buckets["8-14 days"] += 1
+      when 15..30 then age_buckets["15-30 days"] += 1
+      when 31..60 then age_buckets["31-60 days"] += 1
+      else age_buckets["61+ days"] += 1
+      end
+    end
+
+    nil_count = @tickets.where(age: nil).count
+    age_buckets["Unknown"] = nil_count if nil_count.positive?
+
+    @age_distribution = age_buckets.reject { |_k, v| v == 0 }
     
     # Top 10 User Locations
     @user_locations = @tickets.where.not(user_location: [nil, ""])
@@ -76,10 +119,17 @@ class DashboardController < ApplicationController
         @completed_time_series = @tickets.where("LOWER(status) = ?", "completed").group_by_year(:request_date).count
       end
     end
+
+    # Simple pagination without kaminari if needed
+    if defined?(Kaminari)
+      @tickets = @tickets.page(params[:page] || 1).per(50)
+    else
+      page = (params[:page] || 1).to_i
+      per_page = 50
+      @tickets = @tickets.limit(per_page).offset((page - 1) * per_page)
+    end
     
     @categories = Category.all.order(:name)
-    @item_affecteds = @category_filter.present? ? 
-      ItemAffected.where(category_id: @category_filter).order(:name) : 
-      ItemAffected.all.order(:name)
+    @item_affecteds = @category_filter.present? ? ItemAffected.where(category_id: @category_filter).order(:name) : ItemAffected.all.order(:name)
   end
 end

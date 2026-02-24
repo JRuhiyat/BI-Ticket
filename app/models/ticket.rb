@@ -6,7 +6,7 @@ class Ticket < ApplicationRecord
   
   def timeline_days
     return 0 unless request_date && modified_date
-    (modified_date - request_date).to_i
+    age.to_i
   end
   
   def timeline_display

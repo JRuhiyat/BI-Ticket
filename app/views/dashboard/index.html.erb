@@ -66,7 +66,7 @@
     <div class="counters-grid">
       <% @tickets_by_category.each do |category_name, total| %>
         <div class="counter-card">
-          <h3><%= category_name %></h3>
+          <h3><%= category_name[1] %></h3>
           <div class="value"><%= total %></div>
           <div class="sub-value">
             Completed: <%= @completed_by_category[category_name] || 0 %> | 
@@ -123,13 +123,31 @@
             library: {
               plugins: {
                 legend: {
-                  position: "right"
+                  position: "bottom"
                 }
               }
             }
           %>
       <% else %>
         <p style="text-align: center; color: #999; padding: 2rem;">No status data available.</p>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Aged Pie Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Ticket Age Distribution</h3>
+      <button class="chart-toggle-btn" onclick="toggleChart('age-pie-chart')" aria-label="Toggle chart">
+        <span class="toggle-icon">▼</span>
+      </button>
+    </div>
+    <div class="chart-content" id="age-pie-chart">
+      <% if @age_distribution.any? %>
+        <%= pie_chart @age_distribution, id: "age-pie-chart-canvas", height: "400px",
+            library: { plugins: { legend: { position: "bottom" } } } %>
+      <% else %>
+        <p style="text-align: center; color: #999; padding: 2rem;">No age data available.</p>
       <% end %>
     </div>
   </div>
@@ -142,16 +160,18 @@
         <span class="toggle-icon">▼</span>
       </button>
     </div>
-    <div class="chart-content" id="category-pie-chart">
+    <div class="chart-legend scroll-legend chart-content" id="category-pie-chart" data-controller="legend">
       <% if @category_distribution.any? %>
         <%= pie_chart @category_distribution, id: "category-pie-chart-canvas", height: "400px",
           library: {
             plugins: {
+              # legend: { position: "bottom" }
               legend: {
-                position: "right"
+                display: false
               }
             }
           } %>
+          <div id="category-pie-chart-canvas-item" class="scroll-legend"></div>
       <% else %>
         <p style="text-align: center; color: #999; padding: 2rem;">No category data available.</p>
       <% end %>
@@ -160,24 +180,28 @@
   
   <!-- Item Affected Pie Chart -->
   <% if @item_affected_distribution.any? %>
-    <div class="chart-card item-affected">
+    <div class="chart-card">
       <div class="chart-header">
         <h3>Item Affected Distribution</h3>
         <button class="chart-toggle-btn" onclick="toggleChart('item-affected-pie-chart')" aria-label="Toggle chart">
           <span class="toggle-icon">▼</span>
         </button>
       </div>
-      <div class="chart-content" id="item-affected-pie-chart">
+      <div class="chart-legend scroll-legend chart-content" id="item-affected-pie-chart" data-controller="legend">
         <%= pie_chart @item_affected_distribution, id: "item-affected-pie-chart-canvas", height: "400px",
           library: {
             plugins: {
-              legend: { position: "right" }
+              # legend: { position: "bottom" }
+              legend: {
+                display: false
+              }
             }
           } %>
+          <div id="item-affected-pie-chart-canvas-item" class="scroll-legend"></div>
       </div>
     </div>
   <% end %>
-  
+
   <!-- Top 10 User Locations -->
   <div class="chart-card full-width">
     <div class="chart-header">
@@ -266,4 +290,10 @@
       <% end %>
     </tbody>
   </table>
+
+  <% if defined?(Kaminari) && @tickets.respond_to?(:current_page) %>
+    <div class="pagination">
+      <%= paginate @tickets %>
+    </div>
+  <% end %>
 </div>
