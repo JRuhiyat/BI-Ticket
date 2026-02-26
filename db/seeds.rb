@@ -1,8 +1,8 @@
 # Create test user
-User.find_or_create_by!(email: "admin@example.com") do |user|
+User.find_or_create_by!(email: "4dm1n-01@example.com") do |user|
   user.name = "Admin User"
-  user.password = "password123"
-  user.password_confirmation = "password123"
+  user.password = "pwd001!@"
+  user.password_confirmation = "pwd001!@"
 end
 
 [Ticket, ItemAffected, Category].each do |model|
@@ -66,5 +66,3 @@ categories_data.each do |category_name, item_names|
   end
 end
 
-puts "Seed data created successfully!"
-puts "Test user: admin@example.com / password123"
