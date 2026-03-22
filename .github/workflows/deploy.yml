@@ -15,15 +15,18 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }} # Use 22 if you haven't changed it
           script: |
+            # Load Ruby environment (adjust path if using rbenv/rvm)
+            export PATH="$HOME/.rbenv/bin:$HOME/.rbenv/shims:$PATH" 
             cd /var/www/BI-Ticket
             git pull origin master
-            
-            # Asset Management (Automation starts here)
+
             RAILS_ENV=production yarn build
+            # Using full path to bundle if the export above isn't enough
             RAILS_ENV=production bundle exec rails assets:clobber
             RAILS_ENV=production bundle exec rails assets:precompile
             RAILS_ENV=production bundle exec rails assets:clean
-            
-            # Restart the app server (e.g., Puma, Passenger, or Systemd)
+
+            # Requires NOPASSWD setup in visudo as mentioned above
             sudo systemctl restart bi_ticket
             sudo systemctl restart nginx.service
+
