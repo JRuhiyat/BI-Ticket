@@ -1,6 +1,6 @@
 class TicketsController < ApplicationController
   def index
-    @category_filter = params[:category_id]
+    @category_filter = Array.wrap(params[:category_id]).map(&:presence).compact
     @item_affected_filter = params[:item_affected_id]
     @search = params[:search]
     
@@ -10,7 +10,7 @@ class TicketsController < ApplicationController
     if @category_filter.present?
       @tickets = @tickets.where(category_id: @category_filter)
     end
-    
+
     if @item_affected_filter.present?
       @tickets = @tickets.where(item_affected_id: @item_affected_filter)
     end

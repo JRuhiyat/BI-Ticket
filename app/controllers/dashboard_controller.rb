@@ -1,36 +1,29 @@
 class DashboardController < ApplicationController
   def index
-    @category_filter = params[:category_id]
+    @category_filter = Array.wrap(params[:category_id]).map(&:presence).compact
     @item_affected_filter = params[:item_affected_id]
-    @period_filter = params[:period] || "month"
+    @period_filter = params[:period].presence || "month"
     @sort_order = params[:sort_order] || "desc"
-    
+
+    @start_date, @end_date = parse_date_range(
+      params[:start_date],
+      params[:end_date]
+    )
+
     @tickets = Ticket.all
-    
+
     # Apply filters
     if @category_filter.present?
       @tickets = @tickets.where(category_id: @category_filter)
     end
-    
+
     if @item_affected_filter.present?
       @tickets = @tickets.where(item_affected_id: @item_affected_filter)
     end
 
-    # Apply period as a data window (affects all counts/charts)
-    period_start = case @period_filter
-                   when "day"
-                     30.days.ago.beginning_of_day
-                   when "month"
-                     12.months.ago.beginning_of_month
-                   when "year"
-                     5.years.ago.beginning_of_year
-                   else
-                     nil
-                   end
+    @tickets = @tickets.where(request_date: @start_date..@end_date)
 
-    if period_start
-      @tickets = @tickets.where(request_date: period_start..Time.zone.now)
-    end
+    @filter_params = dashboard_filter_params
     
     # Total tickets
     @total_tickets = @tickets.count
@@ -130,6 +123,38 @@ class DashboardController < ApplicationController
     end
     
     @categories = Category.all.order(:name)
-    @item_affecteds = @category_filter.present? ? ItemAffected.where(category_id: @category_filter).order(:name) : ItemAffected.all.order(:name)
+    @item_affecteds = if @category_filter.present?
+                        ItemAffected.where(category_id: @category_filter).order(:name)
+                      else
+                        ItemAffected.all.order(:name)
+                      end
+  end
+
+  private
+
+  def parse_date_range(start_param, end_param)
+    start_d = parse_dashboard_date(start_param) || 12.months.ago.to_date
+    end_d = parse_dashboard_date(end_param) || Time.zone.today
+    start_d, end_d = end_d, start_d if start_d > end_d
+    [start_d, end_d]
+  end
+
+  def parse_dashboard_date(value)
+    return nil if value.blank?
+
+    Date.parse(value)
+  rescue ArgumentError
+    nil
+  end
+
+  def dashboard_filter_params
+    {
+      category_id: @category_filter.presence,
+      item_affected_id: @item_affected_filter.presence,
+      start_date: @start_date.to_s,
+      end_date: @end_date.to_s,
+      period: @period_filter,
+      sort_order: @sort_order
+    }.compact
   end
 end
