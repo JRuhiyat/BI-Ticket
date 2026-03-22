@@ -1,8 +1,8 @@
 # Create test user
-User.find_or_create_by!(email: "4dm1n-01@example.com") do |user|
+User.find_or_create_by!(email: "admin") do |user|
   user.name = "Admin User"
-  user.password = "pwd001!@"
-  user.password_confirmation = "pwd001!@"
+  user.password = "admin1234"
+  user.password_confirmation = "admin1234"
 end
 
 [Ticket, ItemAffected, Category].each do |model|
