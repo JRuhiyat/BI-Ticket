@@ -1,0 +1,29 @@
+name: Deploy Rails App
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }} # Use 22 if you haven't changed it
+          script: |
+            cd /var/www/BI-Ticket
+            git pull origin master
+            
+            # Asset Management (Automation starts here)
+            RAILS_ENV=production yarn build
+            RAILS_ENV=production bundle exec rails assets:clobber
+            RAILS_ENV=production bundle exec rails assets:precompile
+            RAILS_ENV=production bundle exec rails assets:clean
+            
+            # Restart the app server (e.g., Puma, Passenger, or Systemd)
+            sudo systemctl restart bi_ticket
+            sudo systemctl restart nginx.service
