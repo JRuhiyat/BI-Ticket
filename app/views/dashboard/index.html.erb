@@ -101,15 +101,15 @@
     </div>
 
     <div class="chart-content">
-      <% if @time_series.any? || @completed_time_series.any? %>
+      <% if @completed_time_series.any? || @not_completed_time_series.any? %>
 
         <%= column_chart [
-          { name: "Total Tickets", data: @time_series },
-          { name: "Completed Tickets", data: @completed_time_series }
+          { name: "Completed", data: @completed_time_series },
+          { name: "Not Completed", data: @not_completed_time_series }
         ],
         id: "time-series-chart-canvas",
         height: "400px",
-        colors: ["#667eea", "#28a745"],
+        colors: ["#28a745", "#dc3545"],
         library: {
           plugins: {
             legend: {
@@ -135,9 +135,29 @@
             id: "status-pie-chart-canvas",
             height: "400px",
             library: {
+              layout: {
+                padding: {
+                  top: 40,
+                  bottom: 40,
+                  left: 40,
+                  right: 40
+                }
+              },
               plugins: {
                 legend: {
                   position: "bottom"
+                },
+                datalabels: {
+                  display: true,
+                  anchor: "end",
+                  align: "end",
+                  offset: 8,
+                  clamp: true,
+                  color: "#333",
+                  font: {
+                    size: 11,
+                    weight: "bold"
+                  }
                 }
               }
             }
@@ -159,7 +179,34 @@
     <div class="chart-content" id="age-pie-chart">
       <% if @age_distribution.any? %>
         <%= pie_chart @age_distribution, id: "age-pie-chart-canvas", height: "400px",
-            library: { plugins: { legend: { position: "bottom" } } } %>
+            height: "400px",
+            library: {
+              layout: {
+                padding: {
+                  top: 40,
+                  bottom: 40,
+                  left: 40,
+                  right: 40
+                }
+              },
+              plugins: {
+                legend: {
+                  position: "bottom"
+                },
+                datalabels: {
+                  display: true,
+                  anchor: "end",
+                  align: "end",
+                  offset: 8,
+                  clamp: true,
+                  color: "#333",
+                  font: {
+                    size: 11,
+                    weight: "bold"
+                  }
+                }
+              }
+            } %>
       <% else %>
         <p style="text-align: center; color: #999; padding: 2rem;">No age data available.</p>
       <% end %>
@@ -177,14 +224,34 @@
     <div class="chart-legend scroll-legend chart-content" id="category-pie-chart" data-controller="legend">
       <% if @category_distribution.any? %>
         <%= pie_chart @category_distribution, id: "category-pie-chart-canvas", height: "400px",
-          library: {
-            plugins: {
-              # legend: { position: "bottom" }
-              legend: {
-                display: false
+          height: "400px",
+            library: {
+              layout: {
+                padding: {
+                  top: 40,
+                  bottom: 40,
+                  left: 40,
+                  right: 40
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                datalabels: {
+                  display: true,
+                  anchor: "end",
+                  align: "end",
+                  offset: 8,
+                  clamp: true,
+                  color: "#333",
+                  font: {
+                    size: 11,
+                    weight: "bold"
+                  }
+                }
               }
-            }
-          } %>
+            } %>
           <div id="category-pie-chart-canvas-item" class="scroll-legend"></div>
       <% else %>
         <p style="text-align: center; color: #999; padding: 2rem;">No category data available.</p>
@@ -201,20 +268,42 @@
         </button>
       </div>
       <div class="chart-legend scroll-legend chart-content" id="item-affected-pie-chart" data-controller="legend">
-      <% if @item_affected_distribution.any? %>
-        <%= pie_chart @item_affected_distribution, id: "item-affected-pie-chart-canvas", height: "400px",
-          library: {
-            plugins: {
-              # legend: { position: "bottom" }
-              legend: {
-                display: false
+        <br><br>
+        <% if @item_affected_distribution.any? %>
+          <%= pie_chart @item_affected_distribution,
+            id: "item-affected-pie-chart-canvas",
+            height: "400px",
+            library: {
+              layout: {
+                padding: {
+                  top: 40,
+                  bottom: 40,
+                  left: 40,
+                  right: 40
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                datalabels: {
+                  display: true,
+                  anchor: "end",
+                  align: "end",
+                  offset: 8,
+                  clamp: true,
+                  color: "#333",
+                  font: {
+                    size: 11,
+                    weight: "bold"
+                  }
+                }
               }
-            }
-          } %>
+            } %>
           <div id="item-affected-pie-chart-canvas-item" class="scroll-legend"></div>
-      <% else %>
-        <p style="text-align: center; color: #999; padding: 2rem;">No item affected data available.</p>
-      <% end %>
+        <% else %>
+          <p style="text-align: center; color: #999; padding: 2rem;">No item affected data available.</p>
+        <% end %>
       </div>
     </div>
 

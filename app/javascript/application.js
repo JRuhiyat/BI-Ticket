@@ -12,30 +12,65 @@ document.addEventListener("turbo:load", () => {
 
     // Enable datalabels only on pie/doughnut charts
     if (chartObj.config.type === "pie" || chartObj.config.type === "doughnut") {
+      // var ctx = $("#status-pie-chart-canvas").get(0).getContext("2d");
+      // ctx.width = 300;
+      // ctx.height = 300;
       chartObj.options.plugins.datalabels = {
+        display: "auto",
+        // Place labels outside the pie slices.
+        anchor: "end",
+        align: "end",
+        offset: 14,
+        clamp: false,
+        clip: false,
+
+        color: "#fff",
+        padding: 6,
+        borderRadius: 4,
+
+        backgroundColor: (ctx) => {
+          const bg = ctx.dataset.backgroundColor;
+          if (Array.isArray(bg)) return bg[ctx.dataIndex] || "#667eea";
+          return bg || "#667eea";
+        },
+
         formatter: (value, ctx) => {
           const chart = ctx.chart;
-          const data = ctx.dataset.data;
+          if (!chart.getDataVisibility(ctx.dataIndex)) return null;
 
-          // Only consider visible slices when finding the max
-          const visibleValues = data.filter((v, i) => chart.getDataVisibility(i));
-          if (visibleValues.length === 0) return null;
+          const v = Number(value);
+          if (!v) return null;
+
+          const labels = chart.data.labels || [];
+          const label = labels[ctx.dataIndex] || "";
+
+          // Use visible slice total for percentage.
+          const datasetData = ctx.dataset.data.map((x) => Number(x));
+          const total = datasetData.reduce((sum, x, i) => {
+            return chart.getDataVisibility(i) ? sum + x : sum;
+          }, 0);
+          if (!total) return null;
+
+          const pct = (v / total) * 100;
+          const pctRounded = Math.round(pct);
+
+          // Example style: "ONE 7%"
+          return `${pctRounded}%`;
+        },
+
+        font: (ctx) => {
+          const chart = ctx.chart;
+          const v = Number(ctx.raw);
+
+          if (!chart.getDataVisibility(ctx.dataIndex)) return { size: 12, weight: "bold" };
+
+          const datasetData = ctx.dataset.data.map((x) => Number(x));
+          const visibleValues = datasetData.filter((x, i) => chart.getDataVisibility(i));
+          if (!visibleValues.length) return { size: 12, weight: "bold" };
 
           const max = Math.max(...visibleValues);
-
-          // Only show label for the largest *visible* slice
-          if (!chart.getDataVisibility(ctx.dataIndex) || value !== max) return null;
-
-          const total = visibleValues.reduce((a, b) => a + b, 0);
-          const pct = total ? ((value / total) * 100).toFixed(1) : "0";
-          return pct + "%";
-        },
-        color: "#fff",
-        font: { size: 12, weight: "bold" }
-      };
-    } else {
-      chartObj.options.plugins.datalabels = {
-        display: false
+          return v === max ? { size: 14, weight: "bold" } : { size: 12, weight: "bold" };
+        }
       };
     }
 
@@ -44,15 +79,55 @@ document.addEventListener("turbo:load", () => {
       label: () => "",
 
       // Add custom footer
-      footer: (tooltipItems) => {
-        const data = tooltipItems[0].chart.data.datasets[0].data;
+      footer: (tooltipItems) => {        
+        // Special case: time-series chart uses two datasets:
+        // - Completed Tickets
+        // - Not Completed Tickets
+
+        const chart = tooltipItems[0].chart;
         const value = tooltipItems[0].raw;
-        const total = data.reduce((a, b) => a + b, 0);
-        const percentage = ((value / total) * 100).toFixed(1);
+        const chartId = chart.canvas && chart.canvas.id;
+
+        const dataIndex = tooltipItems[0].dataIndex;
+        const datasets = chart.data.datasets;
+
+        const completedDs =
+          datasets.find((ds) => /completed/i.test(ds.label) && !/not/i.test(ds.label)) ||
+          datasets[0];
+        const notCompletedDs =
+          datasets.find((ds) => /not/i.test(ds.label) && /completed/i.test(ds.label)) ||
+          datasets[1];
+
+        const completed = (completedDs && completedDs.data[dataIndex]) || 0;
+        const notCompleted = (notCompletedDs && notCompletedDs.data[dataIndex]) || 0;
+        const total = completed + notCompleted;
+        const percentage = total ? ((value / total) * 100).toFixed(1) : "0";
+
+        // if (chartId === "time-series-chart-canvas") {
+        //   return [
+        //     "Completed: " + completed,
+        //     "Not Completed: " + notCompleted,
+        //     "percentage: " + percentage + "%"
+        //   ];
+        // }
+
+        // if (chartId === "user-locations-bar-chart-canvas") {
+        //   return [
+        //     "Completed: " + completed,
+        //     "Not Completed: " + notCompleted,
+        //     "percentage: " + percentage + "%"
+        //   ];
+        // }
+
+        // Default behavior: keep existing "Total / Completed" tooltip format.
+        // const data = chart.data.datasets[0].data;
+        // const total = data.reduce((a, b) => a + b, 0);
+        // const percentage = total ? ((value / total) * 100).toFixed(1) : "0";
 
         return [
           "Total: " + total,
-          "Completed: " + value,
+          "Completed: " + completed,
+          "Not Completed: " + notCompleted,
           "percentage: " + percentage + "%"
         ];
       }

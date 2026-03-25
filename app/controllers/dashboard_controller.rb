@@ -96,20 +96,38 @@ class DashboardController < ApplicationController
       .to_h
     
     # Time series data
-    @time_series = {}
     @completed_time_series = {}
+    @not_completed_time_series = {}
     
     if @tickets.any?
       case @period_filter
       when "day"
-        @time_series = @tickets.group_by_day(:request_date).count
+        total_time_series = @tickets.group_by_day(:request_date).count
         @completed_time_series = @tickets.where("LOWER(status) = ?", "completed").group_by_day(:request_date).count
+        all_keys = (total_time_series.keys | @completed_time_series.keys).sort
+        all_keys.each do |key|
+          total = total_time_series[key] || 0
+          completed = @completed_time_series[key] || 0
+          @not_completed_time_series[key] = total - completed
+        end
       when "month"
-        @time_series = @tickets.group_by_month(:request_date).count
+        total_time_series = @tickets.group_by_month(:request_date).count
         @completed_time_series = @tickets.where("LOWER(status) = ?", "completed").group_by_month(:request_date).count
+        all_keys = (total_time_series.keys | @completed_time_series.keys).sort
+        all_keys.each do |key|
+          total = total_time_series[key] || 0
+          completed = @completed_time_series[key] || 0
+          @not_completed_time_series[key] = total - completed
+        end
       when "year"
-        @time_series = @tickets.group_by_year(:request_date).count
+        total_time_series = @tickets.group_by_year(:request_date).count
         @completed_time_series = @tickets.where("LOWER(status) = ?", "completed").group_by_year(:request_date).count
+        all_keys = (total_time_series.keys | @completed_time_series.keys).sort
+        all_keys.each do |key|
+          total = total_time_series[key] || 0
+          completed = @completed_time_series[key] || 0
+          @not_completed_time_series[key] = total - completed
+        end
       end
     end
 
