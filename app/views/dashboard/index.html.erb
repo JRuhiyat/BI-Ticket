@@ -93,7 +93,7 @@
   <!-- Time Series Chart -->
   <div class="chart-card full-width">
     <div class="chart-header">
-      <h3>Tickets over time (<%= @period_filter.capitalize %>)
+      <h3>Submitted vs Completed over time (<%= @period_filter.capitalize %>)
         <span style="font-weight: normal; font-size: 0.85em; color: #666;">
           — <%= @start_date.strftime("%Y-%m-%d") %> to <%= @end_date.strftime("%Y-%m-%d") %>
         </span>
@@ -101,15 +101,15 @@
     </div>
 
     <div class="chart-content">
-      <% if @completed_time_series.any? || @not_completed_time_series.any? %>
+      <% if @submitted_time_series.any? || @completed_time_series.any? %>
 
         <%= column_chart [
-          { name: "Completed", data: @completed_time_series },
-          { name: "Not Completed", data: @not_completed_time_series }
+          { name: "Submitted", data: @submitted_time_series },
+          { name: "Completed", data: @completed_time_series }
         ],
         id: "time-series-chart-canvas",
         height: "400px",
-        colors: ["#28a745", "#dc3545"],
+        colors: ["#6c757d", "#28a745"],
         library: {
           plugins: {
             legend: {

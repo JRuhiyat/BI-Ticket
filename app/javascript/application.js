@@ -81,8 +81,8 @@ document.addEventListener("turbo:load", () => {
       // Add custom footer
       footer: (tooltipItems) => {        
         // Special case: time-series chart uses two datasets:
-        // - Completed Tickets
-        // - Not Completed Tickets
+        // - Submitted
+        // - Completed
 
         const chart = tooltipItems[0].chart;
         const value = tooltipItems[0].raw;
@@ -91,45 +91,65 @@ document.addEventListener("turbo:load", () => {
         const dataIndex = tooltipItems[0].dataIndex;
         const datasets = chart.data.datasets;
 
-        const completedDs =
-          datasets.find((ds) => /completed/i.test(ds.label) && !/not/i.test(ds.label)) ||
-          datasets[0];
-        const notCompletedDs =
-          datasets.find((ds) => /not/i.test(ds.label) && /completed/i.test(ds.label)) ||
-          datasets[1];
-
-        const completed = (completedDs && completedDs.data[dataIndex]) || 0;
-        const notCompleted = (notCompletedDs && notCompletedDs.data[dataIndex]) || 0;
-        const total = completed + notCompleted;
-        const percentage = total ? ((value / total) * 100).toFixed(1) : "0";
-
         // if (chartId === "time-series-chart-canvas") {
-        //   return [
-        //     "Completed: " + completed,
-        //     "Not Completed: " + notCompleted,
-        //     "percentage: " + percentage + "%"
-        //   ];
+          const submittedDs =
+            datasets.find((ds) => /submitted/i.test(ds.label) || /total/i.test(ds.label)) ||
+            datasets[0];
+          const completedDs =
+            datasets.find((ds) => /completed/i.test(ds.label)) ||
+            datasets[1] ||
+            datasets[0];
+
+          const submitted = (submittedDs && submittedDs.data[dataIndex]) || 0;
+          const completed = (completedDs && completedDs.data[dataIndex]) || 0;
+          const completionRate = submitted ? ((completed / submitted) * 100).toFixed(1) : "0";
+
+          return [
+            "Submitted: " + submitted,
+            "Completed: " + completed,
+            "Completion: " + completionRate + "%"
+          ];
         // }
 
-        // if (chartId === "user-locations-bar-chart-canvas") {
-        //   return [
-        //     "Completed: " + completed,
-        //     "Not Completed: " + notCompleted,
-        //     "percentage: " + percentage + "%"
-        //   ];
-        // }
+        // const completedDs =
+        //   datasets.find((ds) => /completed/i.test(ds.label) && !/not/i.test(ds.label)) ||
+        //   datasets[0];
+        // const notCompletedDs =
+        //   datasets.find((ds) => /not/i.test(ds.label) && /completed/i.test(ds.label)) ||
+        //   datasets[1];
 
-        // Default behavior: keep existing "Total / Completed" tooltip format.
-        // const data = chart.data.datasets[0].data;
-        // const total = data.reduce((a, b) => a + b, 0);
+        // const completed = (completedDs && completedDs.data[dataIndex]) || 0;
+        // const notCompleted = (notCompletedDs && notCompletedDs.data[dataIndex]) || 0;
+        // const total = completed + notCompleted;
         // const percentage = total ? ((value / total) * 100).toFixed(1) : "0";
 
-        return [
-          "Total: " + total,
-          "Completed: " + completed,
-          "Not Completed: " + notCompleted,
-          "percentage: " + percentage + "%"
-        ];
+        // // if (chartId === "time-series-chart-canvas") {
+        // //   return [
+        // //     "Completed: " + completed,
+        // //     "Not Completed: " + notCompleted,
+        // //     "percentage: " + percentage + "%"
+        // //   ];
+        // // }
+
+        // // if (chartId === "user-locations-bar-chart-canvas") {
+        // //   return [
+        // //     "Completed: " + completed,
+        // //     "Not Completed: " + notCompleted,
+        // //     "percentage: " + percentage + "%"
+        // //   ];
+        // // }
+
+        // // Default behavior: keep existing "Total / Completed" tooltip format.
+        // // const data = chart.data.datasets[0].data;
+        // // const total = data.reduce((a, b) => a + b, 0);
+        // // const percentage = total ? ((value / total) * 100).toFixed(1) : "0";
+
+        // return [
+        //   "Total: " + total,
+        //   "Completed: " + completed,
+        //   "Not Completed: " + notCompleted,
+        //   "percentage: " + percentage + "%"
+        // ];
       }
     };
 
