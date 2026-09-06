@@ -33,11 +33,12 @@ if exist "%APP_DIR%\vendor\bundle" (
     set "BUNDLE_PATH=%APP_DIR%\vendor\bundle"
 )
 
-:: Check if gems are installed for bundled Ruby; auto-install if missing
+:: Check if gems are installed for bundled Ruby; auto-install precompiled binaries if missing
 call bundle exec rails -v >nul 2>&1
 if errorlevel 1 (
     echo.
-    echo First-time setup: Installing required gems...
+    echo First-time setup: Installing precompiled gems for Windows...
+    call bundle config set --local without 'development test'
     call bundle install
     if errorlevel 1 (
         echo [ERROR] Failed to install gems. Please check internet connection for initial setup.

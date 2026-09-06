@@ -27,6 +27,7 @@ fi
 # Check if gems are installed; auto-install if missing
 if ! bundle exec rails -v &> /dev/null; then
     echo "First-time setup: Installing required gems..."
+    bundle config set --local without 'development test'
     bundle install
 fi
 
