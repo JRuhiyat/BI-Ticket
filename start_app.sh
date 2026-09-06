@@ -24,8 +24,14 @@ if [ -d "$SCRIPT_DIR/vendor/bundle" ]; then
     export BUNDLE_PATH="$SCRIPT_DIR/vendor/bundle"
 fi
 
+# Check if gems are installed; auto-install if missing
+if ! bundle exec rails -v &> /dev/null; then
+    echo "First-time setup: Installing required gems..."
+    bundle install
+fi
+
 if [ ! -f "db/development.sqlite3" ]; then
-    echo "First time setup: Preparing local database..."
+    echo "First-time setup: Preparing local database..."
     bundle exec rails db:prepare
 fi
 

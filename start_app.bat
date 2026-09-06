@@ -33,12 +33,28 @@ if exist "%APP_DIR%\vendor\bundle" (
     set "BUNDLE_PATH=%APP_DIR%\vendor\bundle"
 )
 
+:: Check if gems are installed for bundled Ruby; auto-install if missing
+call bundle exec rails -v >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo First-time setup: Installing required gems...
+    call bundle install
+    if errorlevel 1 (
+        echo [ERROR] Failed to install gems. Please check internet connection for initial setup.
+        pause
+        popd
+        exit /b 1
+    )
+)
+
 :: Initialize database if not present
 if not exist "%APP_DIR%\db\development.sqlite3" (
-    echo First time setup: Preparing local database...
+    echo.
+    echo First-time setup: Preparing local database...
     call bundle exec rails db:prepare
 )
 
+echo.
 echo Opening BI Ticket System in your default browser...
 start http://localhost:3000
 
