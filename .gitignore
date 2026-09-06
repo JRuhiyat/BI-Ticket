@@ -1,4 +1,4 @@
-config/database.yml
+# Ignore temporary runtime files
 /tmp/*
 /log
 
@@ -18,7 +18,11 @@ config/database.yml
 /config/credentials/*.key
 /config/credentials/*.enc.backup
 
-# Ignore SQLite local databases
+# Ignore local SQLite databases (user data)
 /db/*.sqlite3
 /db/*.sqlite3-wal
 /db/*.sqlite3-shm
+
+# Ignore local vendor binaries and gems
+/vendor/ruby/
+/vendor/bundle/
