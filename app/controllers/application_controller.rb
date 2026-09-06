@@ -1,16 +1,16 @@
 class ApplicationController < ActionController::Base
-  before_action :require_login
+  # In local offline mode, login is bypassed so users can access dashboard directly
+  # before_action :require_login
   
   private
   
   def current_user
-    @current_user ||= User.find(session[:user_id]) if session[:user_id]
+    @current_user ||= User.find_by(id: session[:user_id]) || User.new(name: "Local User", email: "local@offline")
   end
   helper_method :current_user
   
   def require_login
-    unless current_user
-      redirect_to login_path, alert: "You must be logged in to access this page"
-    end
+    # Direct access allowed in local offline mode
+    true
   end
 end

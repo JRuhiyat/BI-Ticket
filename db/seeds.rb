@@ -1,5 +1,5 @@
 # Create test user
-User.find_or_create_by!(email: "admin") do |user|
+User.find_or_create_by!(email: "admin@example.com") do |user|
   user.name = "Admin User"
   user.password = "admin1234"
   user.password_confirmation = "admin1234"
@@ -7,7 +7,7 @@ end
 
 [Ticket, ItemAffected, Category].each do |model|
   model.delete_all
-  ActiveRecord::Base.connection.reset_pk_sequence!(model.table_name)
+  ActiveRecord::Base.connection.reset_pk_sequence!(model.table_name) rescue nil
 end
 
 # Create Categories and Item Affecteds
